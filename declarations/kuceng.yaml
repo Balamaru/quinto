@@ -1,0 +1,16 @@
+spark_dag_name: kuceng
+spark_namespace: devops
+schedule_interval: '@once'
+task_order:
+  - extract
+tasks:
+  - task_id: extract
+    params:
+      job_name: devops-extract
+      spark_application_file: multi.yaml.j2
+      driverCores: '1'
+      driverMemory: 1G
+      executorCores: '1'
+      executorMemory: 1G
+      executorInstances: '1'
+      custSA: devops

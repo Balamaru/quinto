@@ -1,0 +1,49 @@
+spark_dag_name: steven-flow
+spark_namespace: devops
+schedule_interval: '@once'
+task_order:
+  - extract
+  - - transform1
+    - transform2
+  - store
+tasks:
+  - task_id: extract
+    params:
+      job_name: extract
+      spark_application_file: extract.yaml.j2
+      driverCores: '1'
+      driverMemory: 1G
+      executorCores: '1'
+      executorMemory: 1G
+      executorInstances: '1'
+      custSA: devops
+  - task_id: transform1
+    params:
+      job_name: transform1
+      spark_application_file: transform1.yaml.j2
+      driverCores: '2'
+      driverMemory: 2G
+      executorCores: '2'
+      executorMemory: 2G
+      executorInstances: '2'
+      custSA: devops
+  - task_id: transform2
+    params:
+      job_name: transform2
+      spark_application_file: transform2.yaml.j2
+      driverCores: '2'
+      driverMemory: 2G
+      executorCores: '2'
+      executorMemory: 2G
+      executorInstances: '2'
+      custSA: devops
+  - task_id: store
+    params:
+      job_name: store
+      spark_application_file: store.yaml.j2
+      driverCores: '1'
+      driverMemory: 1G
+      executorCores: '1'
+      executorMemory: 1G
+      executorInstances: '1'
+      custSA: devops
