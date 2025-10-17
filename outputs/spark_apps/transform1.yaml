@@ -1,0 +1,43 @@
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: SparkApplication
+metadata:
+  name: transform1
+spec:
+  type: Python
+  mode: cluster
+  image: "docker.io/phangvicky/custom-spark:v1.2"
+  imagePullPolicy: Always
+  mainApplicationFile: "local:///opt/spark/work-dir/transform1.py"
+  sparkVersion: "3.5.3"
+  keepPod: true
+  restartPolicy:
+    type: Never
+  volumes:
+    - name: s3-job-volume
+      configMap:
+        name: transform1
+  driver:
+    cores: 2
+    memory: 2G
+    labels:
+      version: 3.5.3
+    serviceAccount: devops-spark-operator-spark
+    volumeMounts:
+      - name: s3-job-volume
+        mountPath: /opt/spark/work-dir
+      - name: jars-volume
+        mountPath: /opt/spark/jars/shared
+  executor:
+    cores: 2
+    instances: 2
+    memory: 2G
+    labels:
+      version: 3.5.3
+    volumeMounts:
+      - name: s3-job-volume
+        mountPath: /opt/spark/work-dir
+      - name: jars-volume
+        mountPath: /opt/spark/jars/shared
+  sparkConf:
+    "spark.driver.extraClassPath": "/opt/spark/jars/shared/*"
+    "spark.executor.extraClassPath": "/opt/spark/jars/shared/*"

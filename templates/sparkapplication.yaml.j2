@@ -1,0 +1,43 @@
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: SparkApplication
+metadata:
+  name: {{ params.job_name }}
+spec:
+  type: Python
+  mode: cluster
+  image: "docker.io/phangvicky/custom-spark:v1.2"
+  imagePullPolicy: Always
+  mainApplicationFile: "local:///opt/spark/work-dir/{{ params.spark_application_file }}.py"
+  sparkVersion: "3.5.3"
+  keepPod: true
+  restartPolicy:
+    type: Never
+  volumes:
+    - name: s3-job-volume
+      configMap:
+        name: {{ params.spark_application_file }}
+  driver:
+    cores: {{ params.driverCores }}
+    memory: {{ params.driverMemory }}
+    labels:
+      version: 3.5.3
+    serviceAccount: {{ params.custSA }}-spark-operator-spark
+    volumeMounts:
+      - name: s3-job-volume
+        mountPath: /opt/spark/work-dir
+      - name: jars-volume
+        mountPath: /opt/spark/jars/shared
+  executor:
+    cores: {{ params.executorCores }}
+    instances: {{ params.executorInstances }}
+    memory: {{ params.executorMemory }}
+    labels:
+      version: 3.5.3
+    volumeMounts:
+      - name: s3-job-volume
+        mountPath: /opt/spark/work-dir
+      - name: jars-volume
+        mountPath: /opt/spark/jars/shared
+  sparkConf:
+    "spark.driver.extraClassPath": "/opt/spark/jars/shared/*"
+    "spark.executor.extraClassPath": "/opt/spark/jars/shared/*"

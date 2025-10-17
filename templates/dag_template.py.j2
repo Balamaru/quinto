@@ -28,21 +28,12 @@ class CustomSparkKubernetesOperator(SparkKubernetesOperator):
 {{ task.task_id }} = CustomSparkKubernetesOperator(
     task_id="{{ task.task_id }}",
     namespace="{{ spark_namespace }}",
-    application_file="{{ task.params.spark_application_file }}",
+    application_file="{{ task.params.spark_application_file }}.yaml",
     kubernetes_conn_id="kubernetes_default",
     in_cluster=True,
     do_xcom_push=False,
     get_logs=True,
     log_events_on_failure=True,
-    params={
-        "job_name": {{ task.params.job_name | tojson }},
-        "driverCores": {{ task.params.driverCores | tojson }},
-        "driverMemory": {{ task.params.driverMemory | tojson }},
-        "executorCores": {{ task.params.executorCores | tojson }},
-        "executorMemory": {{ task.params.executorMemory | tojson }},
-        "executorInstances": {{ task.params.executorInstances | tojson }},
-        "custSA": {{ task.params.custSA | tojson }}
-    },
     dag=dag,
 )
 {% endfor %}
