@@ -1,0 +1,50 @@
+from airflow import DAG
+from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
+from airflow.utils.dates import days_ago
+from jinja2 import StrictUndefined
+
+default_args = {
+    "owner": "airflow",
+    "depends_on_past": False,
+    "start_date": days_ago(1),
+}
+
+dag = DAG(
+    "{{ spark_dag_name }}",
+    default_args=default_args,
+    schedule_interval="{{ schedule_interval }}",
+    catchup=False,
+    template_undefined=StrictUndefined,
+)
+
+class CustomSparkKubernetesOperator(SparkKubernetesOperator):
+    template_ext = ('.yaml', '.yaml.j2')
+    template_fields = ('application_file',)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+{% for task in tasks %}
+{{ task.task_id }} = CustomSparkKubernetesOperator(
+    task_id="{{ task.task_id }}",
+    namespace="{{ spark_namespace }}",
+    application_file="{{ task.params.spark_application_file }}.yaml",
+    kubernetes_conn_id="kubernetes_default",
+    in_cluster=True,
+    do_xcom_push=False,
+    get_logs=True,
+    log_events_on_failure=True,
+    dag=dag,
+)
+{% endfor %}
+
+# Dependencies
+{% set dep_parts = [] %}
+{% for item in task_order %}
+    {% if item is string %}
+        {% set _ = dep_parts.append(item) %}
+    {% elif item is sequence %}
+        {% set _ = dep_parts.append("[" + ", ".join(item) + "]") %}
+    {% endif %}
+{% endfor %}
+{{ dep_parts | join(" >> ") }}
